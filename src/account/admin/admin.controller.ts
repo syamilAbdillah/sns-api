@@ -3,6 +3,7 @@ import { LocalAuthGuard } from '../../auth/local-auth.guard';
 import { AdminService } from './admin.service';
 import { AuthService } from '../../auth/auth.service'
 
+
 @Controller('admin')
 export class AdminController {
   constructor(
@@ -10,9 +11,13 @@ export class AdminController {
     private readonly authService: AuthService
   ) {}
 
-  @UseGuards(LocalAuthGuard)
-  @Post('/login')
+  // @UseGuards(LocalAuthGuard)
+  // @Post('/login')
   async login(@Request() req): Promise<any>{
     return await this.authService.login(req.user)
+  }
+
+  async create(adminDto): Promise<any> {
+    return await this.adminService.create(adminDto)
   }
 }

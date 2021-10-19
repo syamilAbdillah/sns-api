@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { AdminService } from '../account/admin/admin.service'
 import { JwtService } from '@nestjs/jwt'
+import bcrypt from 'bcrypt'
+import { AdminService } from '../account/admin/admin.service'
 
 @Injectable()
 export class AuthService {
@@ -12,7 +13,9 @@ export class AuthService {
 	async validateAdmin(email: string, password: string): Promise<any>{
 		const admin = await this.adminService.findByEmail(email)
 
-		if(admin && admin.password == password){
+		const isValidPassword = await bcrypt.compare(password, admin.password)
+
+		if(admin && isValidPassword){
 			const { password, ...result } = admin
 			return result
 		}
