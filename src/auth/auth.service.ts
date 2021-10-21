@@ -10,7 +10,7 @@ export class AuthService {
 		private jwtService: JwtService
 	){}
 
-	async validateAdmin(email: string, password: string): Promise<any>{
+	async validate(email: string, password: string): Promise<any>{
 		const admin = await this.adminService.findByEmail(email)
 
 		const isValidPassword = await bcrypt.compare(password, admin.password)

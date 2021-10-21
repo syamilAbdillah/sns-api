@@ -1,42 +1,71 @@
-import { Injectable } from '@nestjs/common'
-import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
-import bcrypt from 'bcrypt'
+import { Injectable } from '@nestjs/common';
+import { InjectRepository, InjectConnection } from '@nestjs/typeorm' 
+import { Repository, Connection } from 'typeorm'
+import * as bcrypt from 'bcrypt'
+import { Admin } from '../entities/admin.entity'
 import { Account } from '../entities/account.entity'
-import { Admin } from './admin.entity'
+
+
 
 @Injectable()
 export class AdminService {
 	constructor(
+		@InjectRepository(Admin) 
+		private adminRepository: Repository<Admin>,
 		@InjectRepository(Account)
 		private accountRepository: Repository<Account>,
-		@InjectRepository(Admin)
-		private adminRepository: Repository<Admin>
+		@InjectConnection()
+		private connection: Connection
 	){}
 
-	async findByEmail(email: string): Promise<any | undefined>{
-		return this.accountRepository.findOne({email})
+	async findByEmail(email: string): Promise<any>{
+		try {
+			return this.adminRepository.find({
+				where: {
+					account: { email }
+				},
+				relations: ['account']
+			})
+		} catch(error) {
+			console.log(error)
+
+			return null
+		}
 	}
 
-	async create(adminDto: any){
-
-		/**
-		 * NOTE : INI MASIH SALAH !!
-		 * SIMPEN DTO KE ACCOUNT REPO 
-		 * TRUS SIMPEN ID NYA KE ADMIN REPO
-		 * 
-		 * have a nice day :)
-		 * 
-		 * */
+	async create(adminDTO): Promise<any>{
 		const saltRound = 10
 		const salt = await bcrypt.genSalt(saltRound)
-		const hashedPassword = await bcrypt.hash(adminDto.password, salt)
-		const account = this.accountRepository.create(adminDto)
-		const createdAccount = await this.accountRepository.save(account)
-		// const admin = this.adminRepository.create({accountId: createdAccount.id})
-		
-		// return this.adminRepository.save(admin)
+		adminDTO.password = await bcrypt.hash(adminDTO.password, salt)
 
-		return createdAccount
+
+		const queryRunner = this.connection.createQueryRunner()
+
+		await queryRunner.connect()
+		await queryRunner.startTransaction()
+
+		try {
+			const account = this.accountRepository.create(adminDTO)
+			const createdAccount = await queryRunner.manager.save(account)
+			const accountId = queryRunner.manager.getId(createdAccount)
+
+			const admin = this.adminRepository.create({accountId})
+			const createdAdmin = await queryRunner.manager.save(admin)
+			
+			await queryRunner.commitTransaction()
+			
+
+			const result = JSON.parse(JSON.stringify(createdAccount))
+			delete result.password
+
+			return result
+		} catch(error) {
+			console.log('###',{error},'###')
+			await queryRunner.rollbackTransaction()
+
+			return null
+		} finally {
+			await queryRunner.release()
+		}
 	}
 }

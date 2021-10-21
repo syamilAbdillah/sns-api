@@ -15,6 +15,6 @@ export class Account {
 	@Column({ nullable: false })
 	name: string
 
-	@Column()
+	@Column({ nullable: true })
 	photo: string
 }

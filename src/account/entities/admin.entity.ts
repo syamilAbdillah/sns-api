@@ -1,5 +1,5 @@
 import { Entity, PrimaryColumn, OneToOne, JoinColumn } from 'typeorm'
-import { Account } from '../entities/account.entity'
+import { Account } from './account.entity'
 
 @Entity('admin')
 export class Admin {
