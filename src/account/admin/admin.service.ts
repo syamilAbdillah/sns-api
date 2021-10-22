@@ -18,14 +18,15 @@ export class AdminService {
 		private connection: Connection
 	){}
 
+	/**
+	 *	this function required in auth service,
+	 * to find existing user with given email 
+	 * 
+	 * 
+	 */ 
 	async findByEmail(email: string): Promise<any>{
 		try {
-			return this.adminRepository.find({
-				where: {
-					account: { email }
-				},
-				relations: ['account']
-			})
+			return this.accountRepository.findOne({ email })
 		} catch(error) {
 			console.log(error)
 
@@ -33,6 +34,12 @@ export class AdminService {
 		}
 	}
 
+
+
+	/**
+	 * create new account with role admin,
+	 * 
+	 */
 	async create(adminDTO): Promise<any>{
 		const saltRound = 10
 		const salt = await bcrypt.genSalt(saltRound)
@@ -67,5 +74,42 @@ export class AdminService {
 		} finally {
 			await queryRunner.release()
 		}
+	}
+
+	/**
+	 * get list of existing account with role admin
+	 * 
+	 */ 
+	async findAll(): Promise<any>{
+		return this.adminRepository.find({
+			relations: ['account']
+		})
+	}
+
+
+	/**
+	 * get specific admin
+	 *  
+	 */
+	async findById(id: string): Promise<any>{
+		return this.accountRepository.findOne(id)
+	}
+
+
+	/**
+	 * update admin own data 
+	 * 
+	 */
+  	async update(updateDTO, id): Promise<any>{
+		const account = this.accountRepository.create({...updateDTO, id})
+		return this.accountRepository.save(account)
+  	}
+
+	/**
+	 * remove admin account
+	 *  
+	 */
+	async remove(id): Promise<any>{
+		return {}
 	}
 }

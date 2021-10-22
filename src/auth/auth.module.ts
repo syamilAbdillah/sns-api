@@ -8,7 +8,7 @@ import { JwtStrategy } from './jwt.strategy'
 
 @Module({
   imports: [
-    AccountModule, 
+    forwardRef(() => AccountModule), 
     PassportModule,
     JwtModule.register({
       secret: 'YOUR_SECRET_KEY',
